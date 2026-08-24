@@ -14,10 +14,10 @@ stateDiagram-v2
     [*] --> IngestNode: Start Batch
     
     IngestNode --> NormalizeNode: Raw Extraction Rows
-    note right of NormalizeNode: Enforce Typing (Dates/Times)\nDrop Malformed Rows
+    note right of NormalizeNode: Enforce Typing (Dates/Times) Drop Malformed Rows
     
     NormalizeNode --> EvaluateNode: Normalized Rows
-    note right of EvaluateNode: Score vs Ground Truth\nApply ±15m / ±30m Tolerances
+    note right of EvaluateNode: Score vs Ground Truth Apply ±15m / ±30m Tolerances
     
     EvaluateNode --> TriageDecision: EvalResults & Flags
     
@@ -28,7 +28,7 @@ stateDiagram-v2
     HumanReviewNode --> ReportNode: Inject Human Decisions (Resume)
     
     ReportNode --> [*]: Write Final Artifacts
-    note right of ReportNode: IEEE Table (paper_table.md)\nAggregate JSON
+    note right of ReportNode: IEEE Table (paper_table.md) Aggregate JSON
 ```
 
 ---
