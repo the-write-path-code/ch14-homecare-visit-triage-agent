@@ -138,7 +138,7 @@ A side-by-side flowchart comparing the data flow of the naive "batch-and-evaluat
 
 ```mermaid
 flowchart TD
-    subgraph NaiveFlow ["A. Naive Pipeline Data Flow (Unprotected)"]
+    subgraph NaiveFlow ["A. Naive Pipeline Data Flow - Unprotected"]
         direction LR
         N_Ingest[Raw Inputs] --> N_Filter{Filter}
         N_Filter -->|Drop Malformed| N_Drop[Silently Discarded]
@@ -147,15 +147,15 @@ flowchart TD
         note_leak[PII Leaked in Output\nMath Errors Accepted] -.-> N_Output
     end
 
-    subgraph ProtectedFlow ["B. Architecture-Protected Data Flow (Stateful)"]
+    subgraph ProtectedFlow ["B. Architecture-Protected Data Flow - Stateful"]
         direction LR
         P_Ingest[Raw Inputs] --> P_Norm[Fail-Closed Normalizer]
         P_Norm -->|Track Skipped Counts| P_Skipped[normalize_skipped Denominator]
         P_Norm -->|Strict Schema Typed| P_Resolve[Name Resolver]
         P_Resolve -->|In-Memory Identity Separation| P_Eval[Evaluation Engine]
         P_Eval -->|Unsupervised Arithmetic Audits| P_Triage{Triage Gate}
-        P_Triage -->|Ambiguous/Borderline| P_HITL[HITL Gate (Halt Graph)]
-        P_Triage -->|Clean| P_Output[Anonymized Reports (No PHI)]
+        P_Triage -->|Ambiguous/Borderline| P_HITL[HITL Gate - Halt Graph]
+        P_Triage -->|Clean| P_Output[Anonymized Reports - No PHI]
         P_HITL -->|Supervisor Resolve| P_Output
     end
     
