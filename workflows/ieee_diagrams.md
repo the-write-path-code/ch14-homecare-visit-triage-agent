@@ -43,10 +43,10 @@ flowchart TD
     end
     
     subgraph SecureEngine ["Secure Memory Domain"]
-        C[(name_mapping.db)] -.->|Yields: H.Leal| D{Name Resolver}
+        C[(name_mapping.db)] -.->|Yields: J.Doe| D{Name Resolver}
         B -->|Queries: patient_c| D
         
-        D -->|Lookup Key: H.Leal, Date| E[Ground Truth Map]
+        D -->|Lookup Key: J.Doe, Date| E[Ground Truth Map]
         F[(ground_truth.xlsx)] -.-> E
         
         E -->|Yields GT Row| G(Evaluate Node)
