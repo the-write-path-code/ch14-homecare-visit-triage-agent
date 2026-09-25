@@ -46,6 +46,7 @@ Protected Health Information (PHI) isolation is enforced structurally through mo
 <!-- Printed as Chapter 14 Figure 14.4. Do not edit this mermaid. -->
 
 ```mermaid
+%%{init: {"theme": "neutral", "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "11px", "actorFontSize": "11px", "noteFontSize": "10px", "messageFontSize": "10px"}}}%%
 stateDiagram-v2
     direction TB
     
@@ -74,6 +75,7 @@ stateDiagram-v2
 <!-- Printed as Chapter 14 Figure 14.5. Do not edit this mermaid. -->
 
 ```mermaid
+%%{init: {"theme": "neutral", "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "11px", "actorFontSize": "11px", "noteFontSize": "10px", "messageFontSize": "10px"}}}%%
 flowchart TD
     subgraph Input ["Untrusted Domain LLM Outputs"]
         A[Extracted Row] -->|Source: patient_c_week3.pdf| B(Normalize Node)
