@@ -46,28 +46,38 @@ Protected Health Information (PHI) isolation is enforced structurally through mo
 <!-- Printed as Chapter 14 Figure 14.4. Do not edit this mermaid. -->
 
 ```mermaid
-%%{init: {"theme": "neutral", "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "11px", "actorFontSize": "11px", "noteFontSize": "10px", "messageFontSize": "10px"}}}%%
-stateDiagram-v2
-    direction TB
-    
-    [*] --> IngestNode: Start Batch
-    
-    IngestNode --> NormalizeNode: Raw Extraction Rows
-    note right of NormalizeNode: Enforce Typing (Dates/Times) Drop Malformed Rows
-    
-    NormalizeNode --> EvaluateNode: Normalized Rows
-    note right of EvaluateNode: Score vs Ground Truth Apply ±15m / ±30m Tolerances
-    
-    EvaluateNode --> TriageDecision: EvalResults & Flags
-    
-    state TriageDecision <<choice>>
-    TriageDecision --> HumanReviewNode: if needs_review == True
-    TriageDecision --> ReportNode: if needs_review == False
-    
-    HumanReviewNode --> ReportNode: Inject Human Decisions (Resume)
-    
-    ReportNode --> [*]: Write Final Artifacts
-    note right of ReportNode: IEEE Table (paper_table.md) Aggregate JSON
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "24px", "primaryColor": "#F8FAFC", "primaryBorderColor": "#0284C7", "primaryTextColor": "#000000", "lineColor": "#475569"}}}%%
+flowchart TD
+    IngressNorm["<div style='min-width: 820px;'><b>1. Batch Ingestion &amp; Schema Normalization</b><br/><code>IngestNode</code> reads spreadsheet into raw rows; <code>NormalizeNode</code> enforces date/time typing and tallies malformed rows</div>"]
+
+    Evaluate["<div style='min-width: 820px;'><b>2. EvaluateNode (Deterministic Ground Truth Scoring)</b><br/>Scores fields against ground truth with &plusmn;15m/&plusmn;30m tolerances; flags ambiguous entries</div>"]
+    IngestNorm -->|"Normalized Rows"| Evaluate
+
+    Triage["<div style='min-width: 820px;'><b>3. TriageDecision Gate (Evaluation &amp; Review Trigger)</b><br/>Checks: borderline hours (&gt;10m) &bull; ambiguous multi-GT candidates &bull; extractor flag with math match</div>"]
+    Evaluate -->|"EvalResults &amp; Flags"| Triage
+
+    Human["<div style='min-width: 360px;'><b>HumanReviewNode</b><br/><b>LangGraph interrupt()</b><br/>Suspends graph for reviewer resolution</div>"]
+    Clean["<div style='min-width: 360px;'><b>Automated Direct Path</b><br/>Zero ambiguities detected;<br/>immediate throughput</div>"]
+
+    Triage -->|"needs_review == True"| Human
+    Triage -->|"needs_review == False"| Clean
+
+    Report["<div style='min-width: 820px;'><b>4. ReportNode &amp; Final Benchmark Publication</b><br/>Aggregates file metrics, reconciles reviewer inputs &amp; writes <code>paper_table.md</code>, <code>run_summary.json</code></div>"]
+
+    Human -->|"Resume with Decisions"| Report
+    Clean --> Report
+
+    classDef node fill:#EBF5FF,stroke:#2563EB,color:#000000,stroke-width:1.5px
+    classDef triage fill:#FEF9C3,stroke:#CA8A04,color:#000000,stroke-width:2px
+    classDef hitl fill:#FEE2E2,stroke:#DC2626,color:#000000,stroke-width:2px
+    classDef clean fill:#DCFCE7,stroke:#15803D,color:#000000,stroke-width:1.5px
+    classDef report fill:#EDE9FE,stroke:#7C3AED,color:#000000,stroke-width:1.5px
+
+    class IngestNorm,Evaluate node
+    class Triage triage
+    class Human hitl
+    class Clean clean
+    class Report report
 ```
 
 ### Real-filename isolation
@@ -75,29 +85,38 @@ stateDiagram-v2
 <!-- Printed as Chapter 14 Figure 14.5. Do not edit this mermaid. -->
 
 ```mermaid
-%%{init: {"theme": "neutral", "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "11px", "actorFontSize": "11px", "noteFontSize": "10px", "messageFontSize": "10px"}}}%%
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "Arial, Helvetica, sans-serif", "fontSize": "24px", "primaryColor": "#F8FAFC", "primaryBorderColor": "#0284C7", "primaryTextColor": "#000000", "lineColor": "#475569"}}}%%
 flowchart TD
-    subgraph Input ["Untrusted Domain LLM Outputs"]
-        A[Extracted Row] -->|Source: patient_c_week3.pdf| B(Normalize Node)
-    end
-    
-    subgraph SecureEngine ["Secure Memory Domain"]
-        C[(name_mapping.db)] -.->|Yields: J.Doe| D{Name Resolver}
-        B -->|Queries: patient_c| D
-        
-        D -->|Lookup Key: J.Doe, Date| E[Ground Truth Map]
-        F[(ground_truth.xlsx)] -.-> E
-        
-        E -->|Yields GT Row| G(Evaluate Node)
-        B -->|Yields Anon Row| G
-        G -->|Matches Math| H[RowEvalResult]
-    end
-    
-    subgraph Output ["Anonymized Public Domain"]
-        H -->|Strictly patient_c_week3.pdf| I[run_summary.json]
-        H -->|Strictly patient_c_week3.pdf| J[failures.json]
-    end
-    
-    style SecureEngine fill:#f9f2f4,stroke:#333,stroke-width:2px
-    style Output fill:#f4f9f4,stroke:#333,stroke-width:2px
+    Ingress["<div style='min-width: 880px;'><b>1. Untrusted Extraction Output</b><br/><code>Extracted Row</code> (carrying <code>source_file: patient_c_week3.pdf</code>) &rarr; <code>NormalizeNode</code> validates typing</div>"]
+
+    Resolver["<div style='min-width: 410px;'><b>Name Resolver (Secure Memory)</b><br/>Queries <code>name_mapping.db</code> in-memory<br/>Maps <code>patient_c</code> &rarr; <code>H.Leal</code></div>"]
+    GTMap["<div style='min-width: 410px;'><b>Ground Truth Map (Secure Memory)</b><br/>Loads <code>ground_truth.xlsx</code><br/>Indexes lookup key: (H.Leal, Date)</div>"]
+
+    Ingress -->|"Queries: patient_c"| Resolver
+    Resolver -->|"Lookup Key"| GTMap
+
+    Eval["<div style='min-width: 880px;'><b>2. EvaluateNode (Deterministic Ground Truth Scoring &amp; PHI Isolation)</b><br/>Compares normalized row against GT row within &plusmn;15m/&plusmn;30m tolerances</div>"]
+    Ingress -->|"Anon Row"| Eval
+    GTMap -->|"Yields GT Row"| Eval
+
+    Result["<div style='min-width: 880px;'><b>3. RowEvalResult (Pydantic Model Boundary)</b><br/>Real name discarded in-memory; output fields strictly retain <code>source_file: patient_c_week3.pdf</code></div>"]
+    Eval -->|"Matches Math"| Result
+
+    Summary["<div style='min-width: 410px;'><b>run_summary.json (Public Domain)</b><br/>Strictly <code>patient_c_week3.pdf</code></div>"]
+    Failures["<div style='min-width: 410px;'><b>failures.json (Public Domain)</b><br/>Strictly <code>patient_c_week3.pdf</code></div>"]
+
+    Result -->|"Strictly Anonymized"| Summary
+    Result -->|"Strictly Anonymized"| Failures
+
+    classDef untrusted fill:#FEF9C3,stroke:#CA8A04,color:#000000,stroke-width:1.5px
+    classDef secure fill:#FFF1F2,stroke:#E11D48,color:#000000,stroke-width:1.5px
+    classDef eval fill:#E0F2FE,stroke:#0284C7,color:#000000,stroke-width:1.5px
+    classDef result fill:#EDE9FE,stroke:#7C3AED,color:#000000,stroke-width:1.5px
+    classDef public fill:#DCFCE7,stroke:#15803D,color:#000000,stroke-width:1.5px
+
+    class Ingress untrusted
+    class Resolver,GTMap secure
+    class Eval eval
+    class Result result
+    class Summary,Failures public
 ```
