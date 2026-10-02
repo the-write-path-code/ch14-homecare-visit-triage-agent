@@ -89,8 +89,8 @@ flowchart TD
 flowchart TD
     Ingress["<div style='min-width: 880px;'><b>1. Untrusted Extraction Output</b><br/><code>Extracted Row</code> (carrying <code>source_file: patient_c_week3.pdf</code>) &rarr; <code>NormalizeNode</code> validates typing</div>"]
 
-    Resolver["<div style='min-width: 410px;'><b>Name Resolver (Secure Memory)</b><br/>Queries <code>name_mapping.db</code> in-memory<br/>Maps <code>patient_c</code> &rarr; <code>H.Leal</code></div>"]
-    GTMap["<div style='min-width: 410px;'><b>Ground Truth Map (Secure Memory)</b><br/>Loads <code>ground_truth.xlsx</code><br/>Indexes lookup key: (H.Leal, Date)</div>"]
+    Resolver["<div style='min-width: 410px;'><b>Name Resolver (Secure Memory)</b><br/>Queries <code>name_mapping.db</code> in-memory<br/>Maps <code>patient_c</code> &rarr; <code>J. Doe</code></div>"]
+    GTMap["<div style='min-width: 410px;'><b>Ground Truth Map (Secure Memory)</b><br/>Loads <code>ground_truth.xlsx</code><br/>Indexes lookup key: (J. Doe, Date)</div>"]
 
     Ingress -->|"Queries: patient_c"| Resolver
     Resolver -->|"Lookup Key"| GTMap
